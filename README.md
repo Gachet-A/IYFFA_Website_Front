@@ -11,3 +11,33 @@ The objective of the project is to develop a website that allows the association
 ## Tech Stack
 
 - **React** - A JavaScript library for building user interfaces.
+
+## Installation Guide
+
+## Prerequisites
+
+Ensure you have the following installed:
+
+- Python (>=3.8)
+- npm
+- Node.js
+- Git
+
+### 1. Clone the Repository
+```sh
+git clone https://github.com/Gachet-A/IYFFA_Website_Front.git
+cd /PATH/IYFFA_Website_Front
+```
+
+### 2. Install Dependencies
+```sh
+npm install
+```
+
+### 3. Launch the server
+```sh
+npm run dev
+```
+
+### 4. Access the site 
+Click on one of the addresses that appears in the terminal.

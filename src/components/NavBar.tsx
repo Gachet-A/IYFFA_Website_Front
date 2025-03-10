@@ -1,7 +1,7 @@
 /*COMPOSANT BAR DE NAVIGATION*/
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, LogOut } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,9 +12,21 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleSignOut = () => {
+    logout();
+  };
 
   return (
     <div className="w-full border-b border-primary/20 bg-[#020817]">
@@ -76,12 +88,32 @@ export const NavBar = () => {
           {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
-        <Link to="/signin" className="hidden md:flex">
-          <Button variant="outline" className="gap-2 border-white text-white hover:bg-white/20">
-            <User className="h-4 w-4" />
-            <span>Sign In</span>
-          </Button>
-        </Link>
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+                <User className="h-4 w-4" />
+                <span>{user.name} {user.surname}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-[#1A1F2C] border-[#1EAEDB]">
+              <DropdownMenuItem className="text-[#1EAEDB] cursor-default">
+                <span className="opacity-75">{user.email}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white cursor-pointer">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Link to="/signin" className="hidden md:flex">
+            <Button variant="outline" className="gap-2 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+              <User className="h-4 w-4" />
+              <span>Sign In</span>
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div
@@ -97,12 +129,29 @@ export const NavBar = () => {
           <Link to="/donations" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Donations</Link>
           <Link to="/membership" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Become a Member</Link>
           <Link to="/about#contact" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
-          <Link to="/signin" className="flex justify-center mt-4" onClick={() => setIsMobileMenuOpen(false)}>
-            <Button variant="outline" className="w-2/7 border-white text-white hover:bg-white/20">
-              <User className="h-4 w-4" />
-              <span>Sign In</span>
-            </Button>
-          </Link>
+          {user ? (
+            <div className="flex flex-col gap-2 mt-4">
+              <div className="text-[#1EAEDB] py-2">{user.name} {user.surname}</div>
+              <div className="text-[#1EAEDB] opacity-75 py-2">{user.email}</div>
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-2 text-[#1EAEDB] py-2 hover:text-white"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link to="/signin" className="flex justify-center mt-4" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-2/7 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+                <User className="h-4 w-4" />
+                <span>Sign In</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </div>

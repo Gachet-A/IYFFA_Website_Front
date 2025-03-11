@@ -20,13 +20,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { formatEventDate } from "@/lib/dateUtils";
+import { formatEventDate, formatEventDateRange } from "@/lib/dateUtils";
 import { EventForm } from "@/components/EventForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
 
 //récupération des détails de l'évènement 
-//les données ci-dessous sont des temporaires 
 const fetchEventDetails = async (id: string) => {
   const response = await fetch(`http://localhost:8000/api/events/${id}/`);
   if (!response.ok) {
@@ -34,6 +33,20 @@ const fetchEventDetails = async (id: string) => {
   }
   return response.json();
 };
+
+interface EventDetails {
+  eve_id: number;
+  eve_title: string;
+  eve_description: string;
+  eve_start_datetime: string;
+  eve_end_datetime: string;
+  eve_location: string;
+  eve_price: number;
+  formatted_start_date: string;
+  formatted_end_date: string;
+  eve_ticket_url?: string;
+  images?: { img_url: string }[];
+}
 
 const Event = () => {
   const { id } = useParams();
@@ -44,7 +57,7 @@ const Event = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading } = useQuery<EventDetails>({
     queryKey: ['event', id],
     queryFn: () => fetchEventDetails(id || ''),
     enabled: !!id
@@ -126,8 +139,10 @@ const Event = () => {
                   description: event.eve_description,
                   location: event.eve_location,
                   price: event.eve_price,
-                  date: event.eve_date,
-                  endDate: event.eve_end_date,
+                  eve_start_datetime: event.eve_start_datetime,
+                  eve_end_datetime: event.eve_end_datetime,
+                  startTime: new Date(event.eve_start_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                  endTime: event.eve_end_datetime ? new Date(event.eve_end_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '',
                 }}
                 isEditing={true}
               />
@@ -184,7 +199,7 @@ const Event = () => {
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-white">
             <Calendar className="w-5 h-5 text-[#1EAEDB]" />
-            <span>{formatEventDate(event.eve_date, event.eve_end_date)}</span>
+            <span>{formatEventDateRange(event.eve_start_datetime, event.eve_end_datetime)}</span>
           </div>
           
           <div className="flex items-center gap-2 text-white cursor-pointer" onClick={handleGoogleMapsClick}>

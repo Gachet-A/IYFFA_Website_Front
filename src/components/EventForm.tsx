@@ -24,8 +24,14 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
   const [description, setDescription] = useState(initialData?.description || "");
   const [location, setLocation] = useState(initialData?.location || "");
   const [price, setPrice] = useState(initialData?.price || "");
-  const [date, setDate] = useState<Date | undefined>(initialData?.date ? new Date(initialData.date) : undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(initialData?.endDate ? new Date(initialData.endDate) : undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    initialData?.eve_start_datetime ? new Date(initialData.eve_start_datetime) : undefined
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    initialData?.eve_end_datetime ? new Date(initialData.eve_end_datetime) : undefined
+  );
+  const [startTime, setStartTime] = useState(initialData?.startTime || "");
+  const [endTime, setEndTime] = useState(initialData?.endTime || "");
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,6 +46,15 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
       return;
     }
 
+    if (!startDate || !startTime) {
+      toast({
+        title: "Required Fields",
+        description: "Please select both start date and time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -48,8 +63,22 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
       formData.append("description", description);
       formData.append("location", location);
       formData.append("price", price);
-      if (date) formData.append("date", date.toISOString().split('T')[0]);
-      
+
+      // Combine date and time for start datetime
+      const startDateTime = new Date(startDate);
+      const [startHours, startMinutes] = startTime.split(":");
+      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+      formData.append("eve_start_datetime", startDateTime.toISOString());
+
+      // Only append end datetime if both date and time are set
+      if (endDate && endTime) {
+        const endDateTime = new Date(endDate);
+        const [endHours, endMinutes] = endTime.split(":");
+        endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+        formData.append("eve_end_datetime", endDateTime.toISOString());
+      }
+      // If no end date/time, don't include the field at all
+
       // Add images if any
       if (images.length > 0) {
         images.forEach((image, index) => {
@@ -133,54 +162,71 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Start Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "dd.MM.yyyy") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <Input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              required
+              className="w-24 text-white bg-background [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
           <Label>End Date (Optional)</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !endDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "dd.MM.yyyy") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <Input
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="w-24 text-white bg-background [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+            />
+          </div>
         </div>
       </div>
 

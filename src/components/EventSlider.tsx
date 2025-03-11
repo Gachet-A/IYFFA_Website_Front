@@ -25,7 +25,7 @@ export const EventSlider = () => {
   // Filter events to show only upcoming events within the next month
   const upcomingEvents = events
     .filter(event => {
-      const eventDate = parseISO(event.eve_date);
+      const eventDate = parseISO(event.eve_start_datetime);
       return isAfter(eventDate, today) && isBefore(eventDate, nextMonth);
     })
     .slice(0, 3); // Limit to 3 events
@@ -52,7 +52,7 @@ export const EventSlider = () => {
                   <div className="p-6">
                     <div className="flex items-center text-secondary mb-3">
                       <Calendar className="w-4 h-4 mr-2" />
-                      <span>{formatEventDateRange(event.eve_date, event.eve_end_date)}</span>
+                      <span>{formatEventDateRange(event.eve_start_datetime, event.eve_end_datetime)}</span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2 text-[#1EAEDB]">{event.eve_title}</h3>
                     <p className="text-white mb-4">{event.eve_description}</p>

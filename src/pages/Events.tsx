@@ -33,10 +33,12 @@ interface Event {
   eve_id: number;
   eve_title: string;
   eve_description: string;
+  eve_start_datetime: string;
+  eve_end_datetime: string;
   eve_location: string;
-  eve_date: string;
-  eve_end_date?: string;
   eve_price: number;
+  formatted_start_date: string;
+  formatted_end_date: string;
   images?: { img_url: string }[];
 }
 
@@ -188,15 +190,15 @@ const Events = () => {
       event.eve_location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.eve_description.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (!includePastEvents && event.eve_date && isPastEvent(event.eve_date)) {
+    if (!includePastEvents && event.formatted_start_date && isPastEvent(event.formatted_start_date)) {
       return false;
     }
 
     if (selectedDates.length === 0) return matchesSearch;
 
-    if (!event.eve_date) return false;
+    if (!event.formatted_start_date) return false;
 
-    const eventDate = new Date(event.eve_date);
+    const eventDate = new Date(event.formatted_start_date);
     const matchesDate = selectedDates.some(
       selectedDate => selectedDate.toDateString() === eventDate.toDateString()
     );
@@ -336,7 +338,9 @@ const Events = () => {
                   <div className="p-6">
                     <div className="flex items-center text-[#1EAEDB] mb-3">
                       <Calendar className="w-4 h-4 mr-2" />
-                      <span>{event.eve_date ? formatEventDateRange(event.eve_date, event.eve_end_date) : 'Date not set'}</span>
+                      <span>
+                        {formatEventDateRange(event.eve_start_datetime, event.eve_end_datetime)}
+                      </span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2 text-[#1EAEDB]">
                       {event.eve_title}

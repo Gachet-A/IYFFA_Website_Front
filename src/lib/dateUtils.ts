@@ -1,4 +1,3 @@
-
 import { format, isAfter, isBefore, parseISO } from "date-fns";
 
 // Function to format SQL DateTime to display format with time
@@ -16,15 +15,38 @@ export const formatEventDate = (sqlDate: string, endDate?: string): string => {
 };
 
 // Function to format SQL DateTime to a range display format with time
-export const formatEventDateRange = (startDate: string, endDate?: string): string => {
-  return formatEventDate(startDate, endDate);
+export const formatEventDateRange = (startDateTime: string, endDateTime?: string): string => {
+  const start = parseISO(startDateTime);
+  if (!endDateTime) {
+    return start.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  const end = parseISO(endDateTime);
+  return `${start.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })} - ${end.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}`;
 };
 
 // Check if date is in the past
-export const isPastEvent = (eventDate: string): boolean => {
-  const date = parseISO(eventDate);
-  const today = new Date();
-  return isBefore(date, today);
+export const isPastEvent = (dateStr: string): boolean => {
+  const date = parseISO(dateStr);
+  return isBefore(date, new Date());
 };
 
 // Check if date is in the future

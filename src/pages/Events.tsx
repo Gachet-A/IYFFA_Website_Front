@@ -131,6 +131,41 @@ const Events = () => {
     }
   });
 
+  // Add this mutation after your createEventMutation
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      const token = await getToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(`http://localhost:8000/api/events/${eventId}/`, {
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete event");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Event handlers
   const handleCreateEvent = async (formData: FormData) => {
     await createEventMutation.mutateAsync(formData);
@@ -205,6 +240,13 @@ const Events = () => {
     
     return matchesSearch && matchesDate;
   });
+
+  // Add this handler function
+  const handleDeleteEvent = async (eventId: number) => {
+    if (window.confirm("Are you sure you want to delete this event?")) {
+      await deleteEventMutation.mutateAsync(eventId);
+    }
+  };
 
   // Error and loading states
   if (error) {
@@ -351,11 +393,13 @@ const Events = () => {
                     </h3>
                     <p className="text-white/80 mb-2">{event.location}</p>
                     <p className="text-white/60 mb-4 line-clamp-2">{event.description}</p>
-                    <Link to={`/event/${event.id}`}>
-                      <Button variant="outline" className="w-full border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
-                        Learn More
-                      </Button>
-                    </Link>
+                    <div className="flex gap-2 mt-4">
+                      <Link to={`/event/${event.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+                          Learn More
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

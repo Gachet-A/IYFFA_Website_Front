@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MapPin, Calendar, DollarSign, Ticket, ZoomIn, Edit2 } from "lucide-react";
+import { MapPin, Calendar, DollarSign, Ticket, ZoomIn, Edit2, Trash2 } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -105,8 +105,48 @@ const Event = () => {
     },
   });
 
+  const deleteEventMutation = useMutation({
+    mutationFn: async () => {
+      const token = await getToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(`http://localhost:8000/api/events/${id}/`, {
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete event");
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+      navigate('/events'); // Redirect to events page after deletion
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUpdateEvent = async (formData: FormData) => {
     await updateEventMutation.mutateAsync(formData);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (window.confirm("Are you sure you want to delete this event?")) {
+      await deleteEventMutation.mutateAsync();
+    }
   };
 
   const handleGoogleMapsClick = () => {
@@ -176,33 +216,45 @@ const Event = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-[#1EAEDB]">{event.title}</h1>
         {user && (
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Edit2 className="w-4 h-4" />
-                Edit Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Edit Event</DialogTitle>
-              </DialogHeader>
-              <EventForm 
-                onSubmit={handleUpdateEvent}
-                initialData={{
-                  title: event.title,
-                  description: event.description,
-                  location: event.location,
-                  price: event.price,
-                  start_datetime: event.start_datetime,
-                  end_datetime: event.end_datetime,
-                  startTime: new Date(event.start_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-                  endTime: event.end_datetime ? new Date(event.end_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '',
-                }}
-                isEditing={true}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white">
+                  <Edit2 className="w-4 h-4" />
+                  Edit Event
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Edit Event</DialogTitle>
+                </DialogHeader>
+                <EventForm 
+                  onSubmit={handleUpdateEvent}
+                  initialData={{
+                    title: event.title,
+                    description: event.description,
+                    location: event.location,
+                    price: event.price,
+                    start_datetime: event.start_datetime,
+                    end_datetime: event.end_datetime,
+                    startTime: new Date(event.start_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                    endTime: event.end_datetime ? new Date(event.end_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '',
+                  }}
+                  isEditing={true}
+                />
+              </DialogContent>
+            </Dialog>
+            
+            <Button 
+              variant="outline" 
+              className="gap-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+              onClick={handleDeleteEvent}
+              disabled={deleteEventMutation.isPending}
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleteEventMutation.isPending ? "Deleting..." : "Delete Event"}
+            </Button>
+          </div>
         )}
       </div>
 

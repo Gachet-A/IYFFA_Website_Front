@@ -25,13 +25,17 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
   const [location, setLocation] = useState(initialData?.location || "");
   const [price, setPrice] = useState(initialData?.price || "");
   const [startDate, setStartDate] = useState<Date | undefined>(
-    initialData?.eve_start_datetime ? new Date(initialData.eve_start_datetime) : undefined
+    initialData?.start_datetime ? new Date(initialData.start_datetime) : undefined
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    initialData?.eve_end_datetime ? new Date(initialData.eve_end_datetime) : undefined
+    initialData?.end_datetime ? new Date(initialData.end_datetime) : undefined
   );
-  const [startTime, setStartTime] = useState(initialData?.startTime || "");
-  const [endTime, setEndTime] = useState(initialData?.endTime || "");
+  const [startTime, setStartTime] = useState(
+    initialData?.start_datetime ? format(new Date(initialData.start_datetime), "HH:mm") : ""
+  );
+  const [endTime, setEndTime] = useState(
+    initialData?.end_datetime ? format(new Date(initialData.end_datetime), "HH:mm") : ""
+  );
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -76,8 +80,9 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
         const [endHours, endMinutes] = endTime.split(":");
         endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
         formData.append("end_datetime", endDateTime.toISOString());
+      } else {
+        formData.append("end_datetime", ""); // Send empty string to indicate no end date
       }
-      // If no end date/time, don't include the field at all
 
       // Add images if any
       if (images.length > 0) {
@@ -113,6 +118,21 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setImages(Array.from(e.target.files));
+    }
+  };
+
+  const handleEndDateSelect = (date: Date | undefined) => {
+    setEndDate(date);
+    if (!date) {
+      setEndTime(""); // Clear end time when date is cleared
+    }
+  };
+
+  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = e.target.value;
+    setEndTime(newTime);
+    if (!newTime) {
+      setEndDate(undefined); // Clear end date when time is cleared
     }
   };
 
@@ -215,7 +235,7 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={setEndDate}
+                  onSelect={handleEndDateSelect}
                   initialFocus
                 />
               </PopoverContent>
@@ -223,7 +243,7 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
             <Input
               type="time"
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
+              onChange={handleEndTimeChange}
               className="w-24 text-white bg-background [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
             />
           </div>

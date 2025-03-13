@@ -68,14 +68,14 @@ export const EventForm = ({ onSubmit, initialData, isEditing = false }: EventFor
       const startDateTime = new Date(startDate);
       const [startHours, startMinutes] = startTime.split(":");
       startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
-      formData.append("eve_start_datetime", startDateTime.toISOString());
+      formData.append("start_datetime", startDateTime.toISOString());
 
       // Only append end datetime if both date and time are set
       if (endDate && endTime) {
         const endDateTime = new Date(endDate);
         const [endHours, endMinutes] = endTime.split(":");
         endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
-        formData.append("eve_end_datetime", endDateTime.toISOString());
+        formData.append("end_datetime", endDateTime.toISOString());
       }
       // If no end date/time, don't include the field at all
 

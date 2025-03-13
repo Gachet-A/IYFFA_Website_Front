@@ -30,13 +30,13 @@ import { useToast } from "@/components/ui/use-toast";
 
 // Add interface for Event type
 interface Event {
-  eve_id: number;
-  eve_title: string;
-  eve_description: string;
-  eve_start_datetime: string;
-  eve_end_datetime: string;
-  eve_location: string;
-  eve_price: number;
+  id: number;
+  title: string;
+  description: string;
+  start_datetime: string;
+  end_datetime: string;
+  location: string;
+  price: number;
   formatted_start_date: string;
   formatted_end_date: string;
   images?: { img_url: string }[];
@@ -186,9 +186,9 @@ const Events = () => {
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
       searchTerm === "" ||
-      event.eve_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.eve_location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.eve_description.toLowerCase().includes(searchTerm.toLowerCase());
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (!includePastEvents && event.formatted_start_date && isPastEvent(event.formatted_start_date)) {
       return false;
@@ -328,26 +328,30 @@ const Events = () => {
         {filteredEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filteredEvents.map((event) => (
-              <Card key={event.eve_id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#1A1F2C] border-[#1EAEDB]">
+              <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#1A1F2C] border-[#1EAEDB]">
                 <CardContent className="p-0">
                   <img
                     src={event.images?.[0]?.img_url || "/placeholder.svg"}
-                    alt={event.eve_title}
+                    alt={event.title}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      console.error("Image failed to load:", event.images?.[0]?.img_url);
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
                   />
                   <div className="p-6">
                     <div className="flex items-center text-[#1EAEDB] mb-3">
                       <Calendar className="w-4 h-4 mr-2" />
                       <span>
-                        {formatEventDateRange(event.eve_start_datetime, event.eve_end_datetime)}
+                        {formatEventDateRange(event.start_datetime, event.end_datetime)}
                       </span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2 text-[#1EAEDB]">
-                      {event.eve_title}
+                      {event.title}
                     </h3>
-                    <p className="text-white/80 mb-2">{event.eve_location}</p>
-                    <p className="text-white/60 mb-4 line-clamp-2">{event.eve_description}</p>
-                    <Link to={`/event/${event.eve_id}`}>
+                    <p className="text-white/80 mb-2">{event.location}</p>
+                    <p className="text-white/60 mb-4 line-clamp-2">{event.description}</p>
+                    <Link to={`/event/${event.id}`}>
                       <Button variant="outline" className="w-full border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
                         Learn More
                       </Button>

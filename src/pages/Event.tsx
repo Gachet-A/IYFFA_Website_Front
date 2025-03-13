@@ -35,16 +35,16 @@ const fetchEventDetails = async (id: string) => {
 };
 
 interface EventDetails {
-  eve_id: number;
-  eve_title: string;
-  eve_description: string;
-  eve_start_datetime: string;
-  eve_end_datetime: string;
-  eve_location: string;
-  eve_price: number;
+  id: number;
+  title: string;
+  description: string;
+  start_datetime: string;
+  end_datetime: string;
+  location: string;
+  price: number;
   formatted_start_date: string;
   formatted_end_date: string;
-  eve_ticket_url?: string;
+  ticket_url?: string;
   images?: { img_url: string }[];
 }
 
@@ -57,9 +57,14 @@ const Event = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const { data: event, isLoading } = useQuery<EventDetails>({
+  const { data: event, isLoading, error } = useQuery<EventDetails>({
     queryKey: ['event', id],
-    queryFn: () => fetchEventDetails(id || ''),
+    queryFn: async () => {
+      const data = await fetchEventDetails(id);
+      console.log("Event data received:", data);
+      console.log("Event images:", data.images);
+      return data;
+    },
     enabled: !!id
   });
 
@@ -104,22 +109,72 @@ const Event = () => {
     await updateEventMutation.mutateAsync(formData);
   };
 
-  //gestion de l'affichage lorsque les recherches chargent ou que les recherches n'ont pas encore été trouvé
-  if (isLoading) return <div className="container mx-auto py-12 px-4">Loading...</div>;
-  if (!event) return <div className="container mx-auto py-12 px-4">Event not found</div>;
-
-  //affichage de google map pour le lieu de l'évenement
   const handleGoogleMapsClick = () => {
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.eve_location)}`,
-      '_blank'
-    );
+    if (event) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`,
+        '_blank'
+      );
+    }
   };
+
+  // Early returns after all hooks are declared
+  if (!id) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-500 mb-4">Invalid Event</h1>
+          <p className="text-white/80 mb-4">No event ID provided.</p>
+          <Button onClick={() => navigate('/events')} className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90">
+            Return to Events
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-500 mb-4">Error Loading Event</h1>
+          <p className="text-white/80 mb-4">Failed to load event details. Please try again later.</p>
+          <Button onClick={() => navigate('/events')} className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90">
+            Return to Events
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="text-center">
+          <p className="text-white text-xl">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-500 mb-4">Event Not Found</h1>
+          <p className="text-white/80 mb-4">The event you're looking for doesn't exist.</p>
+          <Button onClick={() => navigate('/events')} className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90">
+            Return to Events
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-12 px-4">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-[#1EAEDB]">{event.eve_title}</h1>
+        <h1 className="text-3xl font-bold text-[#1EAEDB]">{event.title}</h1>
         {user && (
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogTrigger asChild>
@@ -135,14 +190,14 @@ const Event = () => {
               <EventForm 
                 onSubmit={handleUpdateEvent}
                 initialData={{
-                  title: event.eve_title,
-                  description: event.eve_description,
-                  location: event.eve_location,
-                  price: event.eve_price,
-                  eve_start_datetime: event.eve_start_datetime,
-                  eve_end_datetime: event.eve_end_datetime,
-                  startTime: new Date(event.eve_start_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-                  endTime: event.eve_end_datetime ? new Date(event.eve_end_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '',
+                  title: event.title,
+                  description: event.description,
+                  location: event.location,
+                  price: event.price,
+                  start_datetime: event.start_datetime,
+                  end_datetime: event.end_datetime,
+                  startTime: new Date(event.start_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                  endTime: event.end_datetime ? new Date(event.end_datetime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '',
                 }}
                 isEditing={true}
               />
@@ -162,8 +217,12 @@ const Event = () => {
                       <div className="relative group cursor-pointer">
                         <img
                           src={image.img_url}
-                          alt={`${event.eve_title} - Image ${index + 1}`}
+                          alt={`${event.title} - Image ${index + 1}`}
                           className="w-full h-[400px] object-cover rounded-lg"
+                          onError={(e) => {
+                            console.error("Image failed to load:", image.img_url);
+                            e.currentTarget.src = "https://placehold.co/600x400?text=No+Image+Available";
+                          }}
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <ZoomIn className="w-12 h-12 text-white" />
@@ -177,7 +236,7 @@ const Event = () => {
                             <CarouselItem key={idx}>
                               <img
                                 src={img.img_url}
-                                alt={`${event.eve_title} - Image ${idx + 1}`}
+                                alt={`${event.title} - Image ${idx + 1}`}
                                 className="w-full h-auto"
                               />
                             </CarouselItem>
@@ -199,24 +258,24 @@ const Event = () => {
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-white">
             <Calendar className="w-5 h-5 text-[#1EAEDB]" />
-            <span>{formatEventDateRange(event.eve_start_datetime, event.eve_end_datetime)}</span>
+            <span>{formatEventDateRange(event.start_datetime, event.end_datetime)}</span>
           </div>
           
           <div className="flex items-center gap-2 text-white cursor-pointer" onClick={handleGoogleMapsClick}>
             <MapPin className="w-5 h-5 text-[#1EAEDB]" />
-            <span className="hover:underline">{event.eve_location}</span>
+            <span className="hover:underline">{event.location}</span>
           </div>
           
           <div className="flex items-center gap-2 text-white">
             <DollarSign className="w-5 h-5 text-[#1EAEDB]" />
-            <span>${event.eve_price}</span>
+            <span>{event.price}.-</span>
           </div>
           
-          <p className="text-white/80">{event.eve_description}</p>
+          <p className="text-white/80">{event.description}</p>
           
           <Button 
             className="w-full md:w-auto bg-[#1EAEDB] hover:bg-[#1EAEDB]/90 gap-2"
-            onClick={() => window.open(event.eve_ticket_url, '_blank')}
+            onClick={() => window.open(event.ticket_url, '_blank')}
           >
             <Ticket className="w-4 h-4" />
             Get Tickets

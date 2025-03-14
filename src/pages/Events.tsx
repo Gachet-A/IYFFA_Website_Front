@@ -225,17 +225,21 @@ const Events = () => {
       event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (!includePastEvents && event.formatted_start_date && isPastEvent(event.formatted_start_date)) {
+    // Check for past events using start_datetime instead of formatted_start_date
+    if (!includePastEvents && event.start_datetime && isPastEvent(new Date(event.start_datetime))) {
       return false;
     }
 
     if (selectedDates.length === 0) return matchesSearch;
 
-    if (!event.formatted_start_date) return false;
+    if (!event.start_datetime) return false;
 
-    const eventDate = new Date(event.formatted_start_date);
+    const eventDate = new Date(event.start_datetime);
     const matchesDate = selectedDates.some(
-      selectedDate => selectedDate.toDateString() === eventDate.toDateString()
+      selectedDate => 
+        selectedDate.getFullYear() === eventDate.getFullYear() &&
+        selectedDate.getMonth() === eventDate.getMonth() &&
+        selectedDate.getDate() === eventDate.getDate()
     );
     
     return matchesSearch && matchesDate;

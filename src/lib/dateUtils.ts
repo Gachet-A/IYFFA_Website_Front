@@ -44,9 +44,11 @@ export const formatEventDateRange = (startDateTime: string, endDateTime?: string
 };
 
 // Check if date is in the past
-export const isPastEvent = (dateStr: string): boolean => {
-  const date = parseISO(dateStr);
-  return isBefore(date, new Date());
+export const isPastEvent = (date: Date | string): boolean => {
+  const eventDate = date instanceof Date ? date : new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return eventDate < today;
 };
 
 // Check if date is in the future

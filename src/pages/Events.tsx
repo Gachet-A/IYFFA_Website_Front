@@ -43,8 +43,6 @@ interface Event {
 }
 
 const Events = () => {
-  console.log("Events component rendering"); // Debug log at the start
-
   const { user, getToken } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,7 +58,6 @@ const Events = () => {
   const { data: events = [], isLoading, error } = useQuery<Event[]>({
     queryKey: ['events'],
     queryFn: async () => {
-      console.log("Fetching events..."); // Debug log
       try {
         const response = await fetch('http://localhost:8000/api/events/');
         if (!response.ok) {
@@ -73,7 +70,6 @@ const Events = () => {
           throw new Error(`Failed to fetch events: ${response.statusText}`);
         }
         const data = await response.json();
-        console.log("Events fetched successfully:", data); // Debug log
         return data;
       } catch (err) {
         console.error('Fetch error:', err);
@@ -89,12 +85,6 @@ const Events = () => {
       const token = await getToken();
       if (!token) {
         throw new Error("No authentication token available");
-      }
-
-      // Log the form data for debugging
-      console.log("Form data being sent:");
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
       }
 
       const response = await fetch("http://localhost:8000/api/events/", {
@@ -268,7 +258,6 @@ const Events = () => {
   }
 
   if (isLoading) {
-    console.log("Events component in loading state");
     return (
       <div className="min-h-screen bg-[#020817] p-8">
         <div className="container mx-auto text-center">
@@ -278,8 +267,6 @@ const Events = () => {
       </div>
     );
   }
-
-  console.log("Events data:", events);
 
   // Main render
   return (

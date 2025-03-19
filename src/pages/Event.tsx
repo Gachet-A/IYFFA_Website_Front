@@ -61,8 +61,6 @@ const Event = () => {
     queryKey: ['event', id],
     queryFn: async () => {
       const data = await fetchEventDetails(id);
-      console.log("Event data received:", data);
-      console.log("Event images:", data.images);
       return data;
     },
     enabled: !!id

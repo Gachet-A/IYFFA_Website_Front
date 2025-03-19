@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { TokenData } from "@/contexts/AuthContext";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -76,8 +77,11 @@ const SignIn = () => {
           description: "We've sent you a verification code.",
         });
       } else {
-        // Use the login function from AuthContext with the complete user data
-        login(data.access, data.user);
+        const tokenData: TokenData = {
+          access: data.access,
+          refresh: data.refresh
+        };
+        login(tokenData, data.user);
         navigate('/');
       }
     } catch (err) {
@@ -104,8 +108,11 @@ const SignIn = () => {
         throw new Error(data.error || 'OTP verification failed');
       }
 
-      // Use the login function from AuthContext with the complete user data
-      login(data.access, data.user);
+      const tokenData: TokenData = {
+        access: data.access,
+        refresh: data.refresh
+      };
+      login(tokenData, data.user);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed. Please try again.');

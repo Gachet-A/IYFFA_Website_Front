@@ -100,6 +100,12 @@ export const NavBar = () => {
               <DropdownMenuItem className="text-[#1EAEDB] cursor-default">
                 <span className="opacity-75">{user.email}</span>
               </DropdownMenuItem>
+              <Link to="/dashboard">
+                <DropdownMenuItem className="text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white cursor-pointer">
+                  <User className="h-4 w-4 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem onClick={handleSignOut} className="text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white cursor-pointer">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -133,6 +139,10 @@ export const NavBar = () => {
             <div className="flex flex-col gap-2 mt-4">
               <div className="text-[#1EAEDB] py-2">{user.name} {user.surname}</div>
               <div className="text-[#1EAEDB] opacity-75 py-2">{user.email}</div>
+              <Link to="/dashboard" className="text-[#1EAEDB] py-2 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+                <User className="h-4 w-4 inline-block mr-2" />
+                Dashboard
+              </Link>
               <button
                 onClick={() => {
                   handleSignOut();

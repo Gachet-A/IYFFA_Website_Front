@@ -20,6 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   getToken: () => Promise<string | null>;
   isLoading: boolean;
+  isAdmin: () => boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -113,6 +114,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const isAdmin = () => {
+    return user?.user_type === 'admin';
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -130,6 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isAuthenticated: !!user,
         getToken,
         isLoading,
+        isAdmin
       }}
     >
       {children}

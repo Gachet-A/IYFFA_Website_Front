@@ -18,11 +18,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 export const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   const handleSignOut = () => {
     logout();
@@ -60,23 +62,18 @@ export const NavBar = () => {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Get Involved</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <div className="grid gap-3 p-4 w-[400px] bg-[#020817] border border-primary/20">
-                  <Link to="/donations" className="block p-2 hover:bg-white/20 rounded-md">
-                    <div className="text-md font-medium text-[#1EAEDB] mb-1">Donations</div>
-                    <p className="text-sm text-white">Support our youth initiatives and community projects</p>
-                  </Link>
-                  <Link to="/membership" className="block p-2 hover:bg-white/20 rounded-md">
-                    <div className="text-md font-medium text-[#1EAEDB] mb-1">Become a Member</div>
-                    <p className="text-sm text-white">Join our community of young changemakers</p>
-                  </Link>
-                  <Link to="/about#contact" className="block p-2 hover:bg-white/20 rounded-md">
-                    <div className="text-md font-medium text-[#1EAEDB] mb-1">About us</div>
-                    <p className="text-sm text-white">Get to know our objectives and team</p>
-                  </Link>
-                </div>
-              </NavigationMenuContent>
+              <Link to="/donations">
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  Donations
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/about">
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  About
+                </NavigationMenuLink>
+              </Link>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
@@ -88,38 +85,47 @@ export const NavBar = () => {
           {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
-                <User className="h-4 w-4" />
-                <span>{user.name} {user.surname}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-[#1A1F2C] border-[#1EAEDB]">
-              <DropdownMenuItem className="text-[#1EAEDB] cursor-default">
-                <span className="opacity-75">{user.email}</span>
-              </DropdownMenuItem>
-              <Link to="/dashboard">
-                <DropdownMenuItem className="text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white cursor-pointer">
-                  <User className="h-4 w-4 mr-2" />
-                  Dashboard
+        <div className="flex items-center gap-4">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.name} {user.surname}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem onClick={handleSignOut} className="text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white cursor-pointer">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Link to="/signin" className="hidden md:flex">
-            <Button variant="outline" className="gap-2 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
-              <User className="h-4 w-4" />
-              <span>Sign In</span>
-            </Button>
-          </Link>
-        )}
+                {isAdmin() && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/users">User Management</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/signin">
+              <Button variant="outline" className="border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+                Sign In
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <div
@@ -133,7 +139,6 @@ export const NavBar = () => {
           <Link to="/events" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Events</Link>
           <Link to="/articles" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Articles</Link>
           <Link to="/donations" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Donations</Link>
-          <Link to="/membership" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Become a Member</Link>
           <Link to="/about#contact" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
           {user ? (
             <div className="flex flex-col gap-2 mt-4">

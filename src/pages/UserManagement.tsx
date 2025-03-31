@@ -55,11 +55,9 @@ const UserManagement = () => {
 
   const handleCreateUser = async (data: UserFormData) => {
     try {
-      console.log('Submitting user creation with data:', data);
       await createUser(data);
       setIsCreateDialogOpen(false);
-      // Force refresh the users list
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
         title: "Success",
         description: "User created successfully",
@@ -75,26 +73,58 @@ const UserManagement = () => {
   };
 
   const handleUpdateUser = async (data: UserFormData) => {
-    if (selectedUser) {
-      try {
-        console.log('Submitting user update with data:', data);
-        await updateUser({ id: selectedUser.id, userData: data });
+    if (!selectedUser?.id) {
+      console.error('No selected user ID found');
+      return;
+    }
+    
+    try {
+      console.log('Starting update process for user:', selectedUser.id);
+      console.log('Form data received:', data);
+      
+      // Préparer les données pour la mise à jour
+      const updateData = {
+        id: selectedUser.id,
+        userData: {
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          birthdate: data.birthdate,
+          phone_number: data.phone_number,
+          user_type: data.user_type,
+          status: data.status,
+          cgu: data.cgu,
+          username: data.email, // S'assurer que le username est toujours égal à l'email
+          ...(data.password && data.password.trim() !== '' ? { password: data.password } : {})
+        }
+      };
+
+      console.log('Sending update request with data:', updateData);
+      
+      // Appeler la mutation d'update avec l'ID et les données
+      await updateUser(updateData);
+      
+      // Rafraîchir les données et fermer le dialog
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      toast({
+        title: "Succès",
+        description: "Utilisateur mis à jour avec succès",
+      });
+
+      // Fermer le dialog après un court délai pour permettre à l'utilisateur de voir le message de succès
+      setTimeout(() => {
         setIsEditDialogOpen(false);
         setSelectedUser(null);
-        // Force refresh the users list
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-        toast({
-          title: "Success",
-          description: "User updated successfully",
-        });
-      } catch (error) {
-        console.error('Error updating user:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to update user",
-          variant: "destructive",
-        });
-      }
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error in handleUpdateUser:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Échec de la mise à jour de l'utilisateur",
+        variant: "destructive",
+      });
     }
   };
 
@@ -102,8 +132,7 @@ const UserManagement = () => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await deleteUser(userId);
-        // Force refresh the users list
-        queryClient.invalidateQueries({ queryKey: ['users'] });
+        await queryClient.invalidateQueries({ queryKey: ['users'] });
         toast({
           title: "Success",
           description: "User deleted successfully",
@@ -120,6 +149,7 @@ const UserManagement = () => {
   };
 
   const handleEditClick = (user: User) => {
+    console.log('Edit clicked for user:', user);
     setSelectedUser(user);
     setIsEditDialogOpen(true);
   };
@@ -216,31 +246,14 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
-                          onClick={() => handleEditClick(user)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Edit User</DialogTitle>
-                          <DialogDescription>
-                            Update the user information using the form below.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <UserForm
-                          onSubmit={handleUpdateUser}
-                          initialData={user}
-                          isSubmitting={isUpdating}
-                        />
-                      </DialogContent>
-                    </Dialog>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
+                      onClick={() => handleEditClick(user)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
 
                     <Button
                       variant="outline"
@@ -258,6 +271,36 @@ const UserManagement = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Dialog d'édition séparé */}
+      <Dialog 
+        open={isEditDialogOpen} 
+        onOpenChange={(open) => {
+          console.log('Dialog open state changing to:', open);
+          if (!open) {
+            console.log('Dialog closing, resetting selected user');
+            setSelectedUser(null);
+          }
+          setIsEditDialogOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information below.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <UserForm
+              key={selectedUser.id}
+              onSubmit={handleUpdateUser}
+              isSubmitting={isUpdating}
+              initialData={selectedUser}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

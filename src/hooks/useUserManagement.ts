@@ -130,15 +130,17 @@ export const useUserManagement = () => {
           throw new Error('Not authenticated');
         }
 
-        // Remove empty fields from userData
-        const cleanedData = Object.fromEntries(
-          Object.entries(userData).filter(([_, value]) => value !== '')
-        );
+        // Nettoyer les données avant l'envoi
+        const cleanedData = {
+          ...userData,
+          username: userData.email, // S'assurer que le username est toujours égal à l'email
+        };
 
-        console.log('Updating user with data:', cleanedData);
+        console.log('Sending PATCH request to:', `/api/users/${id}/`);
+        console.log('With data:', cleanedData);
 
         const response = await fetch(`/api/users/${id}/`, {
-          method: 'PATCH',
+          method: 'PUT', // Utiliser PUT au lieu de PATCH comme pour les articles
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -146,27 +148,25 @@ export const useUserManagement = () => {
           body: JSON.stringify(cleanedData),
         });
 
-        if (response.status === 401) {
-          window.location.href = '/verify-otp';
-          throw new Error('2FA verification required');
-        }
-
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('Update error response:', errorData);
-          throw new Error(errorData.detail || 'Failed to update user');
+          throw new Error(errorData.detail || errorData.error || 'Failed to update user');
         }
 
-        const updatedUser = await response.json();
-        console.log('User updated successfully:', updatedUser);
-        return updatedUser;
+        const responseData = await response.json();
+        console.log('Update successful:', responseData);
+        return responseData;
       } catch (error) {
-        console.error('Error updating user:', error);
+        console.error('Error in updateUserMutation:', error);
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update mutation succeeded:', data);
       queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      console.error('Update mutation failed:', error);
     }
   });
 

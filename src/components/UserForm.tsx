@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -54,41 +54,71 @@ interface UserFormProps {
 }
 
 export const UserForm = ({ onSubmit, initialData, isSubmitting }: UserFormProps) => {
-  // Use appropriate schema based on whether we're creating or updating
   const schema = initialData ? updateUserSchema : createUserSchema;
+  console.log('Form initialized with initialData:', initialData);
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      email: initialData?.email || '',
+      email: '',
       password: '',
-      first_name: initialData?.first_name || '',
-      last_name: initialData?.last_name || '',
-      birthdate: initialData?.birthdate || '',
-      phone_number: initialData?.phone_number || '',
-      user_type: initialData?.user_type || 'user',
-      status: initialData?.status ?? true,
-      cgu: initialData?.cgu ?? false,
+      first_name: '',
+      last_name: '',
+      birthdate: '',
+      phone_number: '',
+      user_type: 'user',
+      status: true,
+      cgu: false,
     },
   });
 
+  // Mettre à jour les valeurs du formulaire quand initialData change
+  useEffect(() => {
+    if (initialData) {
+      console.log('Updating form values with:', initialData);
+      form.reset({
+        email: initialData.email || '',
+        first_name: initialData.first_name || '',
+        last_name: initialData.last_name || '',
+        birthdate: initialData.birthdate || '',
+        phone_number: initialData.phone_number || '',
+        user_type: initialData.user_type || 'user',
+        status: initialData.status ?? true,
+        cgu: initialData.cgu ?? false,
+      });
+    }
+  }, [initialData, form]);
+
   const handleSubmit = async (data: UserFormData) => {
     try {
-      // Remove empty password field for updates
-      if (initialData && !data.password) {
-        delete data.password;
-      }
+      console.log('Form submission started with data:', data);
       
-      await onSubmit(data);
-      toast({
-        title: "Success",
-        description: initialData ? "User updated successfully" : "User created successfully",
-      });
+      // Nettoyer les données avant soumission
+      const cleanedData = {
+        email: data.email.trim(),
+        first_name: data.first_name.trim(),
+        last_name: data.last_name.trim(),
+        birthdate: data.birthdate,
+        phone_number: data.phone_number.trim(),
+        user_type: data.user_type,
+        status: data.status,
+        cgu: data.cgu,
+      };
+
+      // Ajouter le mot de passe uniquement s'il est fourni
+      if (data.password && data.password.trim() !== '') {
+        cleanedData['password'] = data.password.trim();
+      }
+
+      console.log('Cleaned form data to submit:', cleanedData);
+      
+      await onSubmit(cleanedData);
+      console.log('Form submission completed successfully');
     } catch (error) {
       console.error('Form submission error:', error);
       toast({
         title: "Error",
-        description: error.message || "Something went wrong",
+        description: error.message || "Failed to submit form",
         variant: "destructive",
       });
     }
@@ -96,7 +126,13 @@ export const UserForm = ({ onSubmit, initialData, isSubmitting }: UserFormProps)
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form 
+        onSubmit={form.handleSubmit((data) => {
+          console.log('Form submit event triggered with data:', data);
+          handleSubmit(data);
+        })} 
+        className="space-y-6"
+      >
         <FormField
           control={form.control}
           name="email"

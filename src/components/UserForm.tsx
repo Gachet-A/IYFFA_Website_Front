@@ -20,9 +20,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/use-toast';
 import type { UserFormData } from '@/hooks/useUserManagement';
 
-const userFormSchema = z.object({
+// Base schema without password
+const baseSchema = {
   email: z.string().email('Invalid email address'),
   first_name: z.string().min(2, 'First name must be at least 2 characters'),
   last_name: z.string().min(2, 'Last name must be at least 2 characters'),
@@ -31,6 +33,18 @@ const userFormSchema = z.object({
   user_type: z.enum(['admin', 'user']),
   status: z.boolean(),
   cgu: z.boolean(),
+};
+
+// Create schema (requires password)
+const createUserSchema = z.object({
+  ...baseSchema,
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+// Update schema (password optional)
+const updateUserSchema = z.object({
+  ...baseSchema,
+  password: z.string().min(8, 'Password must be at least 8 characters').optional(),
 });
 
 interface UserFormProps {
@@ -40,10 +54,14 @@ interface UserFormProps {
 }
 
 export const UserForm = ({ onSubmit, initialData, isSubmitting }: UserFormProps) => {
+  // Use appropriate schema based on whether we're creating or updating
+  const schema = initialData ? updateUserSchema : createUserSchema;
+
   const form = useForm<UserFormData>({
-    resolver: zodResolver(userFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       email: initialData?.email || '',
+      password: '',
       first_name: initialData?.first_name || '',
       last_name: initialData?.last_name || '',
       birthdate: initialData?.birthdate || '',
@@ -54,9 +72,31 @@ export const UserForm = ({ onSubmit, initialData, isSubmitting }: UserFormProps)
     },
   });
 
+  const handleSubmit = async (data: UserFormData) => {
+    try {
+      // Remove empty password field for updates
+      if (initialData && !data.password) {
+        delete data.password;
+      }
+      
+      await onSubmit(data);
+      toast({
+        title: "Success",
+        description: initialData ? "User updated successfully" : "User created successfully",
+      });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
@@ -70,6 +110,22 @@ export const UserForm = ({ onSubmit, initialData, isSubmitting }: UserFormProps)
             </FormItem>
           )}
         />
+
+        {!initialData && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

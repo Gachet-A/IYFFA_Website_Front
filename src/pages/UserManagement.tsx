@@ -4,12 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserManagement, type User, type UserFormData } from '@/hooks/useUserManagement';
 import { UserForm } from '@/components/UserForm';
 import { Button } from '@/components/ui/button';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -22,6 +24,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from '@/components/ui/use-toast';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -42,35 +45,83 @@ const UserManagement = () => {
     isDeleting
   } = useUserManagement();
 
+  const queryClient = useQueryClient();
+
   // Redirect if not admin
   if (!isAdmin()) {
     navigate('/dashboard');
     return null;
   }
 
-  const handleCreateUser = (data: UserFormData) => {
-    createUser(data, {
-      onSuccess: () => {
-        setIsCreateDialogOpen(false);
-      }
-    });
-  };
-
-  const handleUpdateUser = (data: UserFormData) => {
-    if (selectedUser) {
-      updateUser({ id: selectedUser.id, userData: data }, {
-        onSuccess: () => {
-          setIsEditDialogOpen(false);
-          setSelectedUser(null);
-        }
+  const handleCreateUser = async (data: UserFormData) => {
+    try {
+      console.log('Submitting user creation with data:', data);
+      await createUser(data);
+      setIsCreateDialogOpen(false);
+      // Force refresh the users list
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create user",
+        variant: "destructive",
       });
     }
   };
 
-  const handleDeleteUser = (userId: number) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      deleteUser(userId);
+  const handleUpdateUser = async (data: UserFormData) => {
+    if (selectedUser) {
+      try {
+        console.log('Submitting user update with data:', data);
+        await updateUser({ id: selectedUser.id, userData: data });
+        setIsEditDialogOpen(false);
+        setSelectedUser(null);
+        // Force refresh the users list
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        toast({
+          title: "Success",
+          description: "User updated successfully",
+        });
+      } catch (error) {
+        console.error('Error updating user:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update user",
+          variant: "destructive",
+        });
+      }
     }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await deleteUser(userId);
+        // Force refresh the users list
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        toast({
+          title: "Success",
+          description: "User deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete user",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleEditClick = (user: User) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
   };
 
   if (isLoading) {
@@ -113,6 +164,9 @@ const UserManagement = () => {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Fill in the form below to create a new user account.
+              </DialogDescription>
             </DialogHeader>
             <UserForm
               onSubmit={handleCreateUser}
@@ -168,7 +222,7 @@ const UserManagement = () => {
                           variant="outline"
                           size="icon"
                           className="border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
-                          onClick={() => setSelectedUser(user)}
+                          onClick={() => handleEditClick(user)}
                         >
                           <Edit2 className="w-4 h-4" />
                         </Button>
@@ -176,6 +230,9 @@ const UserManagement = () => {
                       <DialogContent className="max-w-2xl">
                         <DialogHeader>
                           <DialogTitle>Edit User</DialogTitle>
+                          <DialogDescription>
+                            Update the user information using the form below.
+                          </DialogDescription>
                         </DialogHeader>
                         <UserForm
                           onSubmit={handleUpdateUser}

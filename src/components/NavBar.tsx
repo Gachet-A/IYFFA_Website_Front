@@ -41,39 +41,29 @@ export const NavBar = () => {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList className="gap-2 text-md">
             <NavigationMenuItem>
-              <Link to="/">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Home
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link to="/">Home</Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/events">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Events
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link to="/events">Events</Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/articles">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Articles
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link to="/articles">Articles</Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/donations">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Donations
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link to="/donations">Donations</Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/about">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  About
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link to="/about">About</Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>

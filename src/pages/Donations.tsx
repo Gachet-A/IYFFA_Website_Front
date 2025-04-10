@@ -4,8 +4,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, DollarSign } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Donations = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="container mx-auto py-12 px-4">
       <div className="text-center mb-12">
@@ -23,7 +26,12 @@ const Donations = () => {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-white mb-4">Make an immediate impact with a one-time donation.</p>
-            <Button className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90">Donate Now</Button>
+            <Button 
+              className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+              onClick={() => navigate('/one-time-gift')}
+            >
+              Donate Now
+            </Button>
           </CardContent>
         </Card>
 
@@ -34,7 +42,12 @@ const Donations = () => {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-white mb-4">Become a monthly donor to sustain our programs.</p>
-            <Button className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90">Give Monthly</Button>
+            <Button 
+              className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+              onClick={() => navigate('/monthly-support')}
+            >
+              Give Monthly
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -1,0 +1,170 @@
+import React, { useState } from 'react';
+import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useToast } from "@/hooks/use-toast";
+import { Button } from '@/components/ui/button';
+
+interface PaymentFormProps {
+  amount: number;
+  isSubscription?: boolean;
+  onSuccess: () => void;
+  email: string;
+  name: string;
+  address: string;
+  onError?: (error: any) => void;
+  isSetupIntent?: boolean;
+}
+
+type PaymentStatus = 'idle' | 'processing' | 'redirecting' | 'completed';
+
+const PaymentForm: React.FC<PaymentFormProps> = ({ 
+  amount, 
+  isSubscription = false, 
+  onSuccess, 
+  email,
+  name,
+  address,
+  onError, 
+  isSetupIntent = false 
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+
+  // Handle return from Stripe
+  React.useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const payment_intent = query.get('payment_intent');
+    const payment_intent_client_secret = query.get('payment_intent_client_secret');
+    
+    if (payment_intent && payment_intent_client_secret && stripe) {
+      setPaymentStatus('processing');
+      stripe.retrievePaymentIntent(payment_intent_client_secret).then(({paymentIntent}) => {
+        if (paymentIntent.status === 'succeeded') {
+          toast({
+            variant: "default",
+            title: "Payment Successful",
+            description: "A confirmation email has been sent.",
+          });
+          onSuccess();
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Payment Error",
+            description: "Payment failed. Please try again.",
+          });
+        }
+        setPaymentStatus('completed');
+      });
+    }
+  }, [stripe, onSuccess, window.location.search, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      // First validate the form
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        throw submitError;
+      }
+
+      if (isSetupIntent) {
+        const { error: setupError } = await stripe.confirmSetup({
+          elements,
+          redirect: 'if_required',
+        });
+
+        if (setupError) {
+          if (setupError.type === "card_error" || setupError.type === "validation_error") {
+            setError(setupError.message || 'An error occurred');
+          } else {
+            setError('An unexpected error occurred');
+          }
+          throw setupError;
+        }
+      } else {
+        const { error: paymentError } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/thank-you`,
+            payment_method_data: {
+              billing_details: {
+                name,
+                email,
+                address: {
+                  line1: address,
+                },
+              },
+            },
+          },
+        });
+
+        if (paymentError) {
+          if (paymentError.type === "card_error" || paymentError.type === "validation_error") {
+            setError(paymentError.message || 'An error occurred');
+          } else {
+            setError('An unexpected error occurred');
+          }
+          throw paymentError;
+        }
+      }
+
+      onSuccess();
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      if (onError) {
+        onError(error);
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || 'An error occurred while processing your payment',
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement
+        options={{
+          defaultValues: {
+            billingDetails: {
+              name,
+              email,
+              address: {
+                line1: address,
+              },
+            },
+          },
+        }}
+      />
+      {error && (
+        <div className="text-red-500 text-sm mt-2">
+          {error}
+        </div>
+      )}
+      <Button 
+        type="submit" 
+        disabled={!stripe || isProcessing}
+        className="w-full"
+      >
+        {isProcessing ? 'Processing...' : isSetupIntent ? 'Set Up Monthly Donation' : 'Pay Now'}
+      </Button>
+    </form>
+  );
+};
+
+export default PaymentForm; 

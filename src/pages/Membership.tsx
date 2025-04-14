@@ -79,7 +79,7 @@ const Membership = () => {
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
-                className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20"
+                className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                 required
               />
             </div>

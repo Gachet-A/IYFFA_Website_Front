@@ -109,6 +109,7 @@ const Events = () => {
       toast({
         title: "Success",
         description: "Event created successfully",
+        variant: "success",
       });
     },
     onError: (error: Error) => {
@@ -145,6 +146,7 @@ const Events = () => {
       toast({
         title: "Success",
         description: "Event deleted successfully",
+        variant: "success",
       });
     },
     onError: (error: Error) => {

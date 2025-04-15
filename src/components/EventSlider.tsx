@@ -1,4 +1,4 @@
-/*Ce composant permet de faire défiler les Events proposer par l'association*/
+/*This component allows scrolling through Events proposed by the association*/
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";

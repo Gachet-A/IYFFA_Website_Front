@@ -92,6 +92,7 @@ const Event = () => {
       toast({
         title: "Success",
         description: "Event updated successfully",
+        variant: "success",
       });
     },
     onError: (error) => {
@@ -125,6 +126,7 @@ const Event = () => {
       toast({
         title: "Success",
         description: "Event deleted successfully",
+        variant: "success",
       });
       navigate('/events'); // Redirect to events page after deletion
     },

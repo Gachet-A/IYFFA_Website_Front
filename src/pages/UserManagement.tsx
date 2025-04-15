@@ -108,11 +108,11 @@ const UserManagement = () => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       
       toast({
-        title: "Succès",
-        description: "Utilisateur mis à jour avec succès",
+        title: "Success",
+        description: "User updated successfully",
       });
 
-      // Fermer le dialog après un court délai pour permettre à l'utilisateur de voir le message de succès
+      // Close the dialog after a short delay to allow the user to see the success message
       setTimeout(() => {
         setIsEditDialogOpen(false);
         setSelectedUser(null);
@@ -121,8 +121,8 @@ const UserManagement = () => {
     } catch (error) {
       console.error('Error in handleUpdateUser:', error);
       toast({
-        title: "Erreur",
-        description: error.message || "Échec de la mise à jour de l'utilisateur",
+        title: "Error",
+        description: error.message || "Failed to update user",
         variant: "destructive",
       });
     }

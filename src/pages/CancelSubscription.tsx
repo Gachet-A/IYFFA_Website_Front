@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function CancelSubscription() {
   const { subscriptionId } = useParams();
@@ -11,11 +12,55 @@ export default function CancelSubscription() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
+  const { getToken } = useAuth();
 
   const handleCancel = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.post(`http://localhost:8000/api/cancel-subscription/${subscriptionId}/`);
+      const token = await getToken();
+      if (!token) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to cancel a subscription",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // First, find the payment record associated with this subscription ID
+      const paymentResponse = await axios.get(
+        `http://localhost:8000/api/payments/?subscription_id=${subscriptionId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      console.log('Payment response:', paymentResponse.data);
+      
+      if (!paymentResponse.data || paymentResponse.data.length === 0) {
+        toast({
+          title: "Error",
+          description: "No payment record found for this subscription",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const paymentId = paymentResponse.data[0].id;
+      console.log('Payment ID:', paymentId);
+      
+      // Now cancel the subscription using the payment ID
+      const response = await axios.post(
+        `http://localhost:8000/api/cancel_subscription/${paymentId}/`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       
       if (response.data.status === 'success') {
         setIsCancelled(true);
@@ -63,7 +108,7 @@ export default function CancelSubscription() {
                 onClick={() => navigate('/')}
                 disabled={isLoading}
               >
-                Keep Subscription
+                Go Back
               </Button>
               <Button
                 variant="destructive"
@@ -74,7 +119,10 @@ export default function CancelSubscription() {
               </Button>
             </>
           ) : (
-            <Button onClick={() => navigate('/')}>
+            <Button
+              variant="default"
+              onClick={() => navigate('/')}
+            >
               Return to Home
             </Button>
           )}

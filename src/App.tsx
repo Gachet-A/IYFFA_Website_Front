@@ -48,7 +48,7 @@ const App = () => (
                   <Route path="/one-time-gift" element={<OneTimeGift />} />
                   <Route path="/monthly-support" element={<MonthlySupport />} />
                   <Route path="/thank-you" element={<ThankYou />} />
-                  <Route path="/cancel-subscription/:subscriptionId" element={<CancelSubscription />} />
+                  <Route path="/cancel_subscription/:subscriptionId" element={<CancelSubscription />} />
                   <Route path="/membership" element={<Membership />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/signin" element={<SignIn />} />

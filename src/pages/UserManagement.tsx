@@ -191,17 +191,19 @@ const UserManagement = () => {
               Add User
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
               <DialogDescription>
                 Fill in the form below to create a new user account.
               </DialogDescription>
             </DialogHeader>
-            <UserForm
-              onSubmit={handleCreateUser}
-              isSubmitting={isCreating}
-            />
+            <div className="py-4">
+              <UserForm
+                onSubmit={handleCreateUser}
+                isSubmitting={isCreating}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>

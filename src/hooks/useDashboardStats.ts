@@ -50,6 +50,7 @@ export interface DashboardStats {
   total_users?: number;
   total_regular_users?: number;
   total_members?: number;
+  total_admins?:number;
   donations_stats?: {
     total_amount: number;
     monthly_amount: number;

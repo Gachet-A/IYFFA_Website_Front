@@ -6,14 +6,16 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { DashboardStats } from '@/hooks/useDashboardStats';
+import { useGA4Stats } from "@/hooks/useGA4Stats";
 
 const Dashboard = () => {
   const { data: stats, isLoading, error } = useDashboardStats();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { data: gaStats, loading: gaLoading } = useGA4Stats();
 
   useEffect(() => {
     if (!user) {
@@ -42,7 +44,7 @@ const Dashboard = () => {
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             {error instanceof Error ? (
-              error.message === "2FA verification required" ? (
+              error.message === "Unauthorized. Membership required." ? (
                 <>
                   Two-factor authentication is required.
                   <br />
@@ -96,10 +98,20 @@ const Dashboard = () => {
       articles: [],
       events: [],
       projects: []
-    }
+    },
+    total_users: 0,
+    total_members: 0,
+    donations_stats: undefined,
+    user_growth: undefined,
   };
 
   const displayStats = stats || defaultStats;
+
+  // Fonction utilitaire pour vérifier le type membre/admin
+  const isMemberUserType = (type: string | undefined) => type === "member" || type === "admin";
+
+  // Détection du statut membre/admin
+  const isMember = user && isMemberUserType(user.user_type);
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -119,19 +131,14 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white">
-                Status: <span className={displayStats.personal_stats?.membership_status?.is_active ? "text-green-500" : "text-red-500"}>
-                  {displayStats.personal_stats?.membership_status?.is_active ? "Active" : "Inactive"}
+                Status: <span className={isMember ? "text-green-500" : "text-red-500"}>
+                  {isMember ? "Active" : "Inactive"}
                 </span>
               </p>
-              {displayStats.personal_stats?.membership_status?.last_payment && (
-                <p className="text-[#FEF7CD] text-sm">
-                  Last Payment: {new Date(displayStats.personal_stats.membership_status.last_payment.creation_time).toLocaleDateString()}
-                </p>
-              )}
             </div>
-            {!displayStats.personal_stats?.membership_status?.is_active && (
+            {!isMember && (
               <a href="/membership" className="text-[#1EAEDB] hover:underline">
-                Renew Membership
+                Become a Member
               </a>
             )}
           </div>
@@ -158,15 +165,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
-          <CardHeader>
-            <CardTitle className="text-[#1EAEDB] text-xl">My Donations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-white">{displayStats.personal_stats?.my_donations?.length ?? 0}</p>
-            <p className="text-[#FEF7CD] text-sm mt-2">Feature coming soon</p>
-          </CardContent>
-        </Card>
+        {/* Autres stats ... */}
+      
       </div>
 
       {/* Recent Activities */}
@@ -244,46 +244,33 @@ const Dashboard = () => {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-[#1EAEDB] mb-6">Admin Statistics</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
+            <CardHeader>
+              <CardTitle className="text-[#1EAEDB] text-xl">Total Members</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-white">{displayStats.total_members ?? 0}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
+            <CardHeader>
+              <CardTitle className="text-[#1EAEDB] text-xl">Total Admins</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-white">{displayStats.total_admins ?? 0}</p>
+            </CardContent>
+          </Card>
             <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
               <CardHeader>
-                <CardTitle className="text-[#1EAEDB] text-xl">Total Users</CardTitle>
+                <CardTitle className="text-[#1EAEDB] text-xl">Google Analytics (dev)</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-white">{displayStats.total_users ?? 0}</p>
+                <p className="text-white">Visitors (7 days): {gaLoading ? "..." : gaStats?.activeUsers ?? "N/A"}</p>
+                <p className="text-white">Page Views (7 days): {gaLoading ? "..." : gaStats?.pageViews ?? "N/A"}</p>
+                <p className="text-[#FEF7CD] text-xs mt-1">En production, ces valeurs seront issues de Google Analytics 4.</p>
               </CardContent>
             </Card>
-
-            <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
-              <CardHeader>
-                <CardTitle className="text-[#1EAEDB] text-xl">Total Members</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-white">{displayStats.total_members ?? 0}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
-              <CardHeader>
-                <CardTitle className="text-[#1EAEDB] text-xl">Monthly Donations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-white">
-                  ${(displayStats.donations_stats?.monthly_amount ?? 0).toFixed(2)}
-                </p>
-                <p className="text-[#FEF7CD] text-sm mt-2">Payment system coming soon</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
-              <CardHeader>
-                <CardTitle className="text-[#1EAEDB] text-xl">New Members</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-white">
-                  {displayStats.user_growth?.monthly_new_members ?? 0}
-                </p>
-              </CardContent>
-            </Card>
+            {/* Autres stats ...*/}
           </div>
         </div>
       )}

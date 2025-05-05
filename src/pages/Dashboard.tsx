@@ -267,10 +267,28 @@ const Dashboard = () => {
               <CardContent>
                 <p className="text-white">Visitors (7 days): {gaLoading ? "..." : gaStats?.activeUsers ?? "N/A"}</p>
                 <p className="text-white">Page Views (7 days): {gaLoading ? "..." : gaStats?.pageViews ?? "N/A"}</p>
-                <p className="text-[#FEF7CD] text-xs mt-1">En production, ces valeurs seront issues de Google Analytics 4.</p>
+        
               </CardContent>
             </Card>
-            {/* Autres stats ...*/}
+            <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
+              <CardHeader>
+                <CardTitle className="text-[#1EAEDB] text-xl">Payments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white">Total Amount: {displayStats.stripe_payments?.total_amount ?? 0} CHF</p>
+                <p className="text-white">Total Payments: {displayStats.stripe_payments?.count ?? 0}</p>
+                <div className="mt-2">
+                  <p className="text-[#FEF7CD] text-sm font-bold">Recent Payments:</p>
+                  <ul>
+                    {displayStats.stripe_payments?.recent?.map((p, idx) => (
+                      <li key={idx} className="text-[#FEF7CD] text-xs">
+                        {p.amount} {p.currency} - {new Date(p.creation_time).toLocaleDateString()} ({p.status})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}

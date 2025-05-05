@@ -65,6 +65,17 @@ export interface DashboardStats {
     monthly_new_users: number;
     monthly_new_members: number;
   };
+  stripe_payments?: {
+    total_amount: number;
+    count: number;
+    recent: Array<{
+      amount: number;
+      creation_time: string;
+      status: string;
+      currency: string;
+      payment_type: string;
+    }>;
+  };
 }
 
 export const useDashboardStats = () => {

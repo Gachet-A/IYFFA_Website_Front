@@ -63,7 +63,7 @@ const InitialDonationForm: React.FC<InitialDonationFormProps> = ({ onSubmit, isL
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-[#FEF7CD] mb-2">{isSubscription ? 'Set Up Monthly Support' : 'Make a Donation'}</h2>
           <p className="text-lg text-[#FEF7CD]">
-            Your {isSubscription ? 'monthly' : ''} contribution of {amount.toLocaleString('en-CH', { style: 'currency', currency: 'CHF' })} will help empower youth through film.
+            Your {isSubscription ? 'monthly' : ''} contribution of {amount.toLocaleString('en-CH', { style: 'currency', currency: 'CHF' })} will help empower youth.
           </p>
         </div>
 
@@ -130,7 +130,11 @@ const InitialDonationForm: React.FC<InitialDonationFormProps> = ({ onSubmit, isL
             required
           />
           <Label htmlFor="consent" className="text-sm">
-            You agree to have your data collected for legal reason
+            I agree to the{' '}
+            <a href="/terms" className="text-[#1EAEDB] hover:underline">
+              Terms & Data Protection Policy
+            </a>
+            {' '}and consent to the collection and processing of my data for legal purposes.
           </Label>
         </div>
         {errors.consent && <p className="text-red-500 text-sm">{errors.consent}</p>}

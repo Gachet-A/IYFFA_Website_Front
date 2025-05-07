@@ -24,6 +24,7 @@ import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/UserManagement";
 import ThankYou from './pages/ThankYou';
 import CancelSubscription from './pages/CancelSubscription';
+import Terms from './pages/Terms';
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/users" element={<UserManagement />} />
+                  <Route path="/terms" element={<Terms />} />
                 </Routes>
               </div>
               <Footer />

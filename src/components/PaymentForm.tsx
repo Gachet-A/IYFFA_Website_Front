@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
+import { useLocation } from 'react-router-dom';
 
 interface PaymentFormProps {
   amount: number;
@@ -28,6 +29,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const location = useLocation();
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -38,28 +40,31 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     const query = new URLSearchParams(window.location.search);
     const payment_intent = query.get('payment_intent');
     const payment_intent_client_secret = query.get('payment_intent_client_secret');
+    const redirect_status = query.get('redirect_status');
     
     if (payment_intent && payment_intent_client_secret && stripe) {
       setPaymentStatus('processing');
       stripe.retrievePaymentIntent(payment_intent_client_secret).then(({paymentIntent}) => {
         if (paymentIntent.status === 'succeeded') {
-          toast({
-            variant: "default",
-            title: "Payment Successful",
-            description: "A confirmation email has been sent.",
-          });
-          onSuccess();
+          // Only redirect to thank you page on success
+          window.location.href = '/thank-you';
         } else {
+          // Handle failed payment
           toast({
             variant: "destructive",
             title: "Payment Error",
             description: "Payment failed. Please try again.",
           });
+          if (onError) {
+            onError(new Error('Payment failed'));
+          }
+          // Clear URL parameters to prevent re-triggering
+          window.history.replaceState({}, document.title, location.pathname);
         }
         setPaymentStatus('completed');
       });
     }
-  }, [stripe, onSuccess, window.location.search, toast]);
+  }, [stripe, onSuccess, onError, location.pathname, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +101,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         const { error: paymentError } = await stripe.confirmPayment({
           elements,
           confirmParams: {
-            return_url: `${window.location.origin}/thank-you`,
+            // Return to the current page instead of thank you page
+            return_url: window.location.href,
             payment_method_data: {
               billing_details: {
                 name,
@@ -107,6 +113,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               },
             },
           },
+          redirect: 'if_required',
         });
 
         if (paymentError) {

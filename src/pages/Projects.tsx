@@ -3,8 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
+
+interface Document {
+  id: number;
+  file: string;
+  position: number;
+  created_at: string;
+}
 
 interface Project {
   id: number;
@@ -13,22 +21,40 @@ interface Project {
   budget: number;
   status: string;
   user_id: number;
+  author_name: string;
+  formatted_date: string;
+  documents: Document[];
 }
 
 const Projects = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: projects, isLoading } = useQuery<Project[]>({
+  const { data: projects, isLoading, error } = useQuery<Project[]>({
     queryKey: ['projects'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:8000/api/projects/');
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch('http://localhost:8000/api/projects/', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('You need to be a member to view projects');
+        }
         throw new Error('Failed to fetch projects');
       }
       return response.json();
-    }
+    },
+    enabled: !!user
   });
 
   const filteredProjects = projects?.filter(project => 
@@ -40,6 +66,23 @@ const Projects = () => {
     return (
       <div className="container mx-auto py-12 px-4">
         <p className="text-white text-xl text-center">Loading projects...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-500 mb-4">Access Denied</h1>
+          <p className="text-white/80 mb-6">You need to be a member to view and propose projects.</p>
+          <Button 
+            onClick={() => navigate('/support')} 
+            className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+          >
+            Become a Member
+          </Button>
+        </div>
       </div>
     );
   }
@@ -77,14 +120,35 @@ const Projects = () => {
         {filteredProjects?.map((project) => (
           <div 
             key={project.id} 
-            className="bg-[#1A1F2C] rounded-lg p-6 hover:bg-[#2A2F3C] transition-colors cursor-pointer"
-            onClick={() => navigate(`/project/${project.id}`)}
+            className="bg-[#1A1F2C] rounded-lg p-6 space-y-4"
           >
-            <h2 className="text-xl font-semibold text-[#1EAEDB] mb-2">{project.title}</h2>
-            <p className="text-white/80 mb-4 line-clamp-3">{project.description}</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-semibold text-[#1EAEDB]">{project.title}</h3>
+                  {project.documents && project.documents.length > 0 && (
+                    <FileText className="w-4 h-4 text-[#1EAEDB]" />
+                  )}
+                </div>
+                <p className="text-white/60 text-sm mt-1">Proposed by {project.author_name} on {project.formatted_date}</p>
+              </div>
+              <span className={`${
+                project.status === 'approved' ? 'text-green-500' :
+                project.status === 'pending' ? 'text-yellow-500' :
+                'text-red-500'
+              }`}>
+                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+              </span>
+            </div>
+            <p className="text-white/80 line-clamp-2">{project.description}</p>
             <div className="flex justify-between items-center">
-              <span className="text-[#FEF7CD]">{project.status}</span>
-              <span className="text-white/60">{project.budget} CHF</span>
+              <span className="text-white/60">Budget: {project.budget} CHF</span>
+              <Button
+                onClick={() => navigate(`/project/${project.id}`)}
+                className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+              >
+                View Details
+              </Button>
             </div>
           </div>
         ))}

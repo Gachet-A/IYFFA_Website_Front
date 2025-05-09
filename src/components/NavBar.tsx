@@ -55,11 +55,13 @@ export const NavBar = () => {
                 <Link to="/articles">Articles</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                <Link to="/projects">Projects</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            {user && (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link to="/projects">Projects</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}
             <NavigationMenuItem>
               <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                 <Link to="/donations">Donations</Link>
@@ -70,16 +72,6 @@ export const NavBar = () => {
                 <Link to="/about">About</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            {user && (
-              <NavigationMenuItem>
-                <Link to="/projects/new">
-                  <Button variant="outline" className="gap-2 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
-                    <Plus className="w-4 h-4" />
-                    Propose Project
-                  </Button>
-                </Link>
-              </NavigationMenuItem>
-            )}
           </NavigationMenuList>
         </NavigationMenu>
 
@@ -143,17 +135,11 @@ export const NavBar = () => {
           <Link to="/" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
           <Link to="/events" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Events</Link>
           <Link to="/articles" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Articles</Link>
-          <Link to="/projects" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Projects</Link>
+          {user && (
+            <Link to="/projects" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Projects</Link>
+          )}
           <Link to="/donations" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>Donations</Link>
           <Link to="/about#contact" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
-          {user && (
-            <Link to="/projects/new" className="text-white py-2" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Propose Project
-              </div>
-            </Link>
-          )}
           {user ? (
             <div className="flex flex-col gap-2 mt-4">
               <div className="text-[#1EAEDB] py-2">{user.name} {user.surname}</div>

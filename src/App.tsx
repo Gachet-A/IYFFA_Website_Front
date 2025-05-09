@@ -27,7 +27,6 @@ import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/UserManagement";
 import ThankYou from './pages/ThankYou';
 import CancelSubscription from './pages/CancelSubscription';
-
 const queryClient = new QueryClient();
 
 const App = () => (

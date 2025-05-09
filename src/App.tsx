@@ -12,6 +12,9 @@ import Events from "./pages/Events";
 import Event from "./pages/Event";
 import Articles from "./pages/Articles";
 import Article from "./pages/Article";
+import Projects from "./pages/Projects";
+import Project from "./pages/Project";
+import NewProject from "./pages/NewProject";
 import Donations from "./pages/Donations";
 import OneTimeGift from "./pages/OneTimeGift";
 import MonthlySupport from "./pages/MonthlySupport";
@@ -44,6 +47,9 @@ const App = () => (
                   <Route path="/event/:id" element={<Event />} />
                   <Route path="/articles" element={<Articles />} />
                   <Route path="/article/:id" element={<Article />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/project/:id" element={<Project />} />
+                  <Route path="/projects/new" element={<NewProject />} />
                   <Route path="/donations" element={<Donations />} />
                   <Route path="/one-time-gift" element={<OneTimeGift />} />
                   <Route path="/monthly-support" element={<MonthlySupport />} />

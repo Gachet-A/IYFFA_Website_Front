@@ -6,8 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Membership = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
@@ -20,9 +25,59 @@ const Membership = () => {
     acceptTerms3: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    setIsSubmitting(true);
+
+    try {
+      // Validate terms acceptance
+      if (!formData.acceptTerms1) {
+        toast({
+          title: "Error",
+          description: "You must accept the terms and conditions to register.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          name: formData.name,
+          surname: formData.surname,
+          dateOfBirth: formData.dateOfBirth,
+          phone: formData.phone,
+          acceptTerms1: formData.acceptTerms1,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      toast({
+        title: "Success",
+        description: "Registration successful! Please wait for admin approval.",
+      });
+
+      // Redirect to home page after successful registration
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Registration failed',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,8 +213,12 @@ const Membership = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90">
-              Submit Registration
+            <Button 
+              type="submit" 
+              className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Registration"}
             </Button>
           </form>
         </CardContent>

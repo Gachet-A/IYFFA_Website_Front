@@ -116,11 +116,18 @@ export const NavBar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link to="/signin">
-              <Button variant="outline" className="border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
-                Sign In
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to="/signin">
+                <Button variant="outline" className="border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/membership">
+                <Button className="bg-[#1EAEDB] hover:bg-[#1EAEDB]/90 text-white">
+                  Become a Member
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -160,12 +167,19 @@ export const NavBar = () => {
               </button>
             </div>
           ) : (
-            <Link to="/signin" className="flex justify-center mt-4" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-2/7 border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
-                <User className="h-4 w-4" />
-                <span>Sign In</span>
-              </Button>
-            </Link>
+            <div className="flex flex-col gap-2 mt-4">
+              <Link to="/signin" className="flex justify-center" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-[#1EAEDB] text-[#1EAEDB] hover:bg-[#1EAEDB] hover:text-white">
+                  <User className="h-4 w-4 mr-2" />
+                  <span>Sign In</span>
+                </Button>
+              </Link>
+              <Link to="/membership" className="flex justify-center" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90 text-white">
+                  Become a Member
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>

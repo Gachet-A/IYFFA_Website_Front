@@ -22,13 +22,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Edit2, Trash2, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
+import { useMutation } from '@tanstack/react-query';
 
 const UserManagement = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, getToken } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -46,6 +47,40 @@ const UserManagement = () => {
   } = useUserManagement();
 
   const queryClient = useQueryClient();
+
+  const approveUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const token = await getToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(`http://localhost:8000/api/auth/approve-user/${userId}/`, {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to approve user");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: "Success",
+        description: "User approved successfully. Password setup email has been sent.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve user",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Redirect if not admin
   if (!isAdmin()) {
@@ -154,6 +189,12 @@ const UserManagement = () => {
     setIsEditDialogOpen(true);
   };
 
+  const handleApproveUser = async (userId: number) => {
+    if (window.confirm('Are you sure you want to approve this user?')) {
+      await approveUserMutation.mutateAsync(userId);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-12 px-4">
@@ -248,6 +289,17 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    {!user.status && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                        onClick={() => handleApproveUser(user.id)}
+                        disabled={approveUserMutation.isPending}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="icon"
@@ -256,7 +308,6 @@ const UserManagement = () => {
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
-
                     <Button
                       variant="outline"
                       size="icon"

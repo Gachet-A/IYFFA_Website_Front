@@ -1,167 +1,276 @@
 /*PAGE DE MOT DE PASSE OUBLIE*/
 /*Cette page permet de récupérer un accès si le mot de passe est oublié*/
 
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Mail, ArrowLeft, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+import { Loader2, Lock, AlertCircle, CheckCircle, Mail } from "lucide-react";
 
 const ForgotPassword = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  
   const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTokenChecking, setIsTokenChecking] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [error, setError] = useState("");
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; //permet de s'assurer de la validité de l'email
-    return emailRegex.test(email);
-  };
+  const token = searchParams.get("token");
+  const emailParam = searchParams.get("email");
 
-  //Permet d'indique le comportement à suivre si l'email n'est pas valide
-  const handleBlur = () => {
-    if (email && !validateEmail(email)) {
-      setEmailError("Please enter a valid email address.");
-    } else {
-      setEmailError("");
-    }
-  };
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!token || !emailParam) {
+        setIsTokenValid(false);
+        return;
+      }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+      setIsTokenChecking(true);
+      try {
+        const response = await fetch(`/api/auth/reset-password/?token=${token}&email=${emailParam}`);
+        const data = await response.json();
+
+        if (response.ok && data.valid) {
+          setIsTokenValid(true);
+          setEmail(emailParam);
+        } else {
+          setIsTokenValid(false);
+          setError(data.error || "Invalid or expired link");
+        }
+      } catch (error) {
+        setIsTokenValid(false);
+        setError("Failed to validate reset link. Please try again.");
+      } finally {
+        setIsTokenChecking(false);
+      }
+    };
+
+    validateToken();
+  }, [token, emailParam]);
+
+  const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address.");
-      return;
-    }
-    
-    setIsLoading(true);
+    setError("");
+    setIsSubmitting(true);
     
     try {
-      //C'est ici que nous ferons un appel a API au backend Django
-      //C'est zone sert de placeholder en attendant que la connexion front back se fasse
-      const response = await fetch('/api/reset-password', {
-        method: 'POST',
+      const response = await fetch("/api/auth/request-reset/", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
-        setIsSubmitted(true);
         toast({
-          title: "Reset link sent",
-          description: `We've sent a password reset link to ${email}`,
+          title: "Success",
+          description: "Password reset instructions sent to your email",
         });
+        setEmail("");
       } else {
-        // Gestion des cas ou l'email n'est pas trouvé en base de données
-        toast({
-          title: "Error",
-          description: data.message || "Something went wrong. Please try again.",
-          variant: "destructive",
-        });
+        setError(data.error || "Failed to send reset link. Please try again.");
       }
     } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send reset link. Please try again later.",
-        variant: "destructive",
-      });
+      setError("Failed to send reset link. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="container mx-auto py-12 px-4">
-      <div className="max-w-md mx-auto">
-        <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-[#1EAEDB]">
-              Reset Your Password
-            </CardTitle>
-            <CardDescription className="text-white/70 mt-2">
-              Enter your email address and we'll send you a link to reset your password.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-white flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </label>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setEmailError("");
-                    }}
-                    onBlur={handleBlur}
-                    className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20"
-                    required
-                    placeholder="Enter your registered email"
-                  />
-                  {emailError && (
-                    <p className="text-red-500 text-sm mt-1">{emailError}</p>
-                  )}
-                </div>
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
 
-                <Button
-                  type="submit"
-                  className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    "Send Reset Link"
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <div className="space-y-6 py-4">
-                <div className="bg-green-900/30 border border-green-500/50 rounded-md p-4 text-center">
-                  <p className="text-white">
-                    Check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.
-                  </p>
-                </div>
-                
-                <div className="text-center">
-                  <Button
-                    variant="outline"
-                    className="mt-4 border-[#1EAEDB]/20 text-[#1EAEDB]"
-                    onClick={() => setIsSubmitted(false)}
-                  >
-                    Try another email
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="mt-6 text-center">
-              <Link
-                to="/signin"
-                className="text-[#1EAEDB] hover:underline inline-flex items-center gap-1"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Sign In
-              </Link>
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      setError("Password must contain at least one number");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/reset-password/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          token,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Your password has been reset successfully",
+        });
+        navigate("/signin");
+      } else {
+        setError(data.error || "Failed to reset password. Please try again.");
+      }
+    } catch (error) {
+      setError("Failed to reset password. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isTokenChecking) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-md mx-auto bg-[#1A1F2C] border-[#1EAEDB]/20">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1EAEDB]"></div>
+              <p className="text-white">Validating reset link...</p>
             </div>
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  if (token && !isTokenValid) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-md mx-auto bg-[#1A1F2C] border-[#1EAEDB]/20">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-[#1EAEDB]">Invalid or Expired Link</CardTitle>
+            <CardDescription className="text-white">
+              {error || "This password reset link is invalid or has expired."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => navigate("/forgot-password")}
+              className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+            >
+              Request New Reset Link
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-12 px-4">
+      <Card className="max-w-md mx-auto bg-[#1A1F2C] border-[#1EAEDB]/20">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-[#1EAEDB]">
+            {token ? "Reset Your Password" : "Forgot Password"}
+          </CardTitle>
+          <CardDescription className="text-white">
+            {token
+              ? "Please enter your new password below"
+              : "Enter your email address and we'll send you a link to reset your password"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-6 p-3 bg-red-900/30 border border-red-500/50 rounded-md flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <p className="text-white text-sm">{error}</p>
+            </div>
+          )}
+          <form onSubmit={token ? handleResetPassword : handleRequestReset} className="space-y-6">
+            {!token && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-white flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20"
+                    placeholder="Enter your email address"
+                    required
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Sending..." : "Send Reset Link"}
+                </Button>
+              </div>
+            )}
+
+            {token && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-white flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    New Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20"
+                    required
+                    placeholder="Enter your new password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-white flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Confirm Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20"
+                    required
+                    placeholder="Confirm your new password"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#1EAEDB] hover:bg-[#1EAEDB]/90"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Resetting..." : "Reset Password"}
+                </Button>
+              </div>
+            )}
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -22,11 +22,12 @@ import Membership from "./pages/Membership";
 import About from "./pages/About";
 import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/UserManagement";
 import ThankYou from './pages/ThankYou';
 import CancelSubscription from './pages/CancelSubscription';
+import SetupPassword from "@/pages/SetupPassword";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -58,9 +59,9 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/signin" element={<SignIn />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/users" element={<UserManagement />} />
+                  <Route path="/setup-password" element={<SetupPassword />} />
                 </Routes>
               </div>
               <Footer />

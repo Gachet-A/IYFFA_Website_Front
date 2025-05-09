@@ -6,6 +6,7 @@ interface User {
   name: string;
   surname: string;
   user_type: 'admin' | 'user';
+  otp_enabled: boolean;
 }
 
 export interface TokenData {

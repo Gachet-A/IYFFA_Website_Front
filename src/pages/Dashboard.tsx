@@ -4,18 +4,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { DashboardStats } from '@/hooks/useDashboardStats';
 import { useGA4Stats } from "@/hooks/useGA4Stats";
+import { use2FA } from "@/hooks/use2FA";
+import { TwoFactorDialog } from "@/components/TwoFactorDialog";
+import { TwoFactorConfirmationDialog } from "@/components/TwoFactorConfirmationDialog";
+import { Switch } from "@/components/ui/switch";
 
 const Dashboard = () => {
   const { data: stats, isLoading, error } = useDashboardStats();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { data: gaStats, loading: gaLoading } = useGA4Stats();
+  const { enable2FA, verify2FA, disable2FA, isEnabling, isVerifying, isDisabling } = use2FA();
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<'enable' | 'disable'>('enable');
 
   useEffect(() => {
     if (!user) {
@@ -23,6 +31,33 @@ const Dashboard = () => {
       return;
     }
   }, [user, navigate]);
+
+  const handle2FAToggle = (checked: boolean) => {
+    setConfirmationAction(checked ? 'enable' : 'disable');
+    setShowConfirmationDialog(true);
+  };
+
+  const handleConfirm2FA = () => {
+    if (confirmationAction === 'enable') {
+      enable2FA(undefined, {
+        onSuccess: () => {
+          setShowConfirmationDialog(false);
+          setShowVerificationDialog(true);
+        },
+      });
+    } else {
+      disable2FA();
+      setShowConfirmationDialog(false);
+    }
+  };
+
+  const handleVerify2FA = (otp: string) => {
+    verify2FA(otp, {
+      onSuccess: () => {
+        setShowVerificationDialog(false);
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -121,6 +156,26 @@ const Dashboard = () => {
           Welcome to your personal dashboard. Here you can view your statistics and manage your account.
         </p>
       </div>
+
+      {/* Security Settings */}
+      <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20 mb-8">
+        <CardHeader>
+          <CardTitle className="text-[#1EAEDB] text-xl">Security Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-[#1EAEDB]" />
+              <span className="text-white">Two-Factor Authentication</span>
+            </div>
+            <Switch
+              checked={user?.otp_enabled}
+              onCheckedChange={handle2FAToggle}
+              disabled={isEnabling || isDisabling}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Membership Status */}
       <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20 mb-8">
@@ -292,6 +347,22 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* 2FA Dialogs */}
+      <TwoFactorDialog
+        isOpen={showVerificationDialog}
+        onClose={() => setShowVerificationDialog(false)}
+        onVerify={handleVerify2FA}
+        isVerifying={isVerifying}
+      />
+      <TwoFactorConfirmationDialog
+        isOpen={showConfirmationDialog}
+        onClose={() => setShowConfirmationDialog(false)}
+        onConfirm={handleConfirm2FA}
+        isEnabling={isEnabling}
+        isDisabling={isDisabling}
+        action={confirmationAction}
+      />
     </div>
   );
 };

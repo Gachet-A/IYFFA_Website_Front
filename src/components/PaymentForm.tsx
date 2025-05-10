@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface PaymentFormProps {
   amount: number;
@@ -30,6 +30,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const location = useLocation();
+  const navigate = useNavigate();
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,8 +47,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       setPaymentStatus('processing');
       stripe.retrievePaymentIntent(payment_intent_client_secret).then(({paymentIntent}) => {
         if (paymentIntent.status === 'succeeded') {
-          // Only redirect to thank you page on success
-          window.location.href = '/thank-you';
+          navigate('/thank-you');
         } else {
           // Handle failed payment
           toast({
@@ -64,7 +64,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         setPaymentStatus('completed');
       });
     }
-  }, [stripe, onSuccess, onError, location.pathname, toast]);
+  }, [stripe, onSuccess, onError, location.pathname, toast, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,11 +98,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           throw setupError;
         }
       } else {
-        const { error: paymentError } = await stripe.confirmPayment({
+        const result = await stripe.confirmPayment({
           elements,
           confirmParams: {
-            // Return to the current page instead of thank you page
-            return_url: window.location.href,
+            // Redirect to payment result page after payment
+            return_url: `${window.location.origin}/payment-result`,
             payment_method_data: {
               billing_details: {
                 name,
@@ -116,6 +116,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           redirect: 'if_required',
         });
 
+        const { error: paymentError, paymentIntent } = result;
+
         if (paymentError) {
           if (paymentError.type === "card_error" || paymentError.type === "validation_error") {
             setError(paymentError.message || 'An error occurred');
@@ -123,6 +125,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             setError('An unexpected error occurred');
           }
           throw paymentError;
+        }
+
+        // If paymentIntent is returned and status is succeeded, navigate to /payment-result
+        if (paymentIntent && paymentIntent.status === 'succeeded') {
+          navigate(`/payment-result?payment_intent=${paymentIntent.id}&payment_intent_client_secret=${paymentIntent.client_secret}&redirect_status=succeeded`);
+          return;
         }
       }
 

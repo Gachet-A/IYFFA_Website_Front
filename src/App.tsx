@@ -26,6 +26,7 @@ import ThankYou from './pages/ThankYou';
 import CancelSubscription from './pages/CancelSubscription';
 import Terms from './pages/Terms';
 import Payments from './pages/Payments';
+import PaymentResult from './pages/PaymentResult';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                   <Route path="/users" element={<UserManagement />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/payments" element={<Payments />} />
+                  <Route path="/payment-result" element={<PaymentResult />} />
                 </Routes>
               </div>
               <Footer />

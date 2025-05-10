@@ -3,7 +3,7 @@ import { useAuth } from './useAuth';
 import { toast } from '@/components/ui/use-toast';
 
 export const use2FA = () => {
-  const { getToken } = useAuth();
+  const { getToken, login } = useAuth();
   const queryClient = useQueryClient();
 
   const enable2FAMutation = useMutation({
@@ -67,7 +67,12 @@ export const use2FA = () => {
         title: "Success",
         description: data.message,
       });
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+      if (data.user) {
+        login(
+          { access: data.access, refresh: data.refresh },
+          data.user
+        );
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -103,7 +108,12 @@ export const use2FA = () => {
         title: "Success",
         description: data.message,
       });
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+      if (data.user) {
+        login(
+          { access: data.access, refresh: data.refresh },
+          data.user
+        );
+      }
     },
     onError: (error: Error) => {
       toast({

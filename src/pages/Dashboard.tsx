@@ -220,8 +220,14 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Autres stats ... */}
-      
+        <Card className="bg-[#1A1F2C] border-[#1EAEDB]/20">
+          <CardHeader>
+            <CardTitle className="text-[#1EAEDB] text-xl">My Projects</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-white">{displayStats.personal_stats?.my_projects ?? 0}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Activities */}

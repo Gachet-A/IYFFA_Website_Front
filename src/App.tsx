@@ -25,6 +25,7 @@ import UserManagement from "./pages/UserManagement";
 import ThankYou from './pages/ThankYou';
 import CancelSubscription from './pages/CancelSubscription';
 import Terms from './pages/Terms';
+import Payments from './pages/Payments';
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/users" element={<UserManagement />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/payments" element={<Payments />} />
                 </Routes>
               </div>
               <Footer />

@@ -64,7 +64,7 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch("/api/auth/request-reset/", {
+      const response = await fetch("/api/auth/request-password-reset/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

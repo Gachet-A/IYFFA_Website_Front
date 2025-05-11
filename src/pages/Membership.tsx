@@ -186,7 +186,10 @@ const Membership = () => {
                   className="border-[#1EAEDB]"
                 />
                 <label htmlFor="terms1" className="text-white text-sm">
-                  I accept the terms and conditions
+                  I accept the{' '}
+                  <a href="/terms" className="text-[#1EAEDB] hover:underline">
+                    Terms & Data Protection Policy
+                  </a>
                 </label>
               </div>
               <div className="flex items-center gap-2">

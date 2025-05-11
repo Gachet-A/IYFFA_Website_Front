@@ -47,8 +47,19 @@ export default function CancelSubscription() {
         });
         return;
       }
-      
-      const paymentId = paymentResponse.data[0].id;
+      // Filter for a payment with a matching, non-empty subscription_id
+      const matchingPayment = paymentResponse.data.find(
+        (p: any) => p.subscription_id && p.subscription_id === subscriptionId
+      );
+      if (!matchingPayment) {
+        toast({
+          title: "Error",
+          description: "No valid payment record found for this subscription.",
+          variant: "destructive"
+        });
+        return;
+      }
+      const paymentId = matchingPayment.id;
       console.log('Payment ID:', paymentId);
       
       // Now cancel the subscription using the payment ID

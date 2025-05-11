@@ -82,12 +82,7 @@ const MonthlySupport = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Set Up Monthly Support</CardTitle>
-          <CardDescription className="text-center">
-            Join our community of monthly donors and make a lasting impact on youth empowerment.
-          </CardDescription>
-        </CardHeader>
+        
         <CardContent>
           <InitialDonationForm
             isSubscription={true}

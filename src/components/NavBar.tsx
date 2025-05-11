@@ -103,6 +103,14 @@ export const NavBar = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/membership-renewal">Membership Renewal</Link>
+                </DropdownMenuItem>
+                {isAdmin() && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/payments">Payment History</Link>
+                  </DropdownMenuItem>
+                )}
                 {isAdmin() && (
                   <DropdownMenuItem asChild>
                     <Link to="/users">User Management</Link>
@@ -155,6 +163,14 @@ export const NavBar = () => {
                 <User className="h-4 w-4 inline-block mr-2" />
                 Dashboard
               </Link>
+              <Link to="/membership-renewal" className="text-[#1EAEDB] py-2 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+                Membership Renewal
+              </Link>
+              {isAdmin() && (
+                <Link to="/payments" className="text-[#1EAEDB] py-2 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+                  Payment History
+                </Link>
+              )}
               <button
                 onClick={() => {
                   handleSignOut();

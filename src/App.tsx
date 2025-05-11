@@ -27,6 +27,9 @@ import CancelSubscription from './pages/CancelSubscription';
 import Terms from './pages/Terms';
 import Payments from './pages/Payments';
 import PaymentResult from './pages/PaymentResult';
+import MembershipRenewal from './pages/MembershipRenewal';
+import CotisationPaymentResult from './pages/CotisationPaymentResult';
+import ThankYouCotisation from './pages/ThankYouCotisation';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +65,9 @@ const App = () => (
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/payments" element={<Payments />} />
                   <Route path="/payment-result" element={<PaymentResult />} />
+                  <Route path="/membership-renewal" element={<MembershipRenewal />} />
+                  <Route path="/cotisation-payment-result" element={<CotisationPaymentResult />} />
+                  <Route path="/thank-you-cotisation" element={<ThankYouCotisation />} />
                 </Routes>
               </div>
               <Footer />

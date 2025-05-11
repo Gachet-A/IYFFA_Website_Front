@@ -13,6 +13,7 @@ interface PaymentFormProps {
   address: string;
   onError?: (error: any) => void;
   isSetupIntent?: boolean;
+  returnUrl?: string;
 }
 
 type PaymentStatus = 'idle' | 'processing' | 'redirecting' | 'completed';
@@ -25,7 +26,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   name,
   address,
   onError, 
-  isSetupIntent = false 
+  isSetupIntent = false,
+  returnUrl = '/payment-result'
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -47,7 +49,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       setPaymentStatus('processing');
       stripe.retrievePaymentIntent(payment_intent_client_secret).then(({paymentIntent}) => {
         if (paymentIntent.status === 'succeeded') {
-          navigate('/thank-you');
+          navigate(returnUrl === '/payment-result' ? '/thank-you' : '/thank-you-cotisation');
         } else {
           // Handle failed payment
           toast({
@@ -64,7 +66,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         setPaymentStatus('completed');
       });
     }
-  }, [stripe, onSuccess, onError, location.pathname, toast, navigate]);
+  }, [stripe, onSuccess, onError, location.pathname, toast, navigate, returnUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +104,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           elements,
           confirmParams: {
             // Redirect to payment result page after payment
-            return_url: `${window.location.origin}/payment-result`,
+            return_url: `${window.location.origin}${returnUrl}`,
             payment_method_data: {
               billing_details: {
                 name,
@@ -129,7 +131,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
         // If paymentIntent is returned and status is succeeded, navigate to /payment-result
         if (paymentIntent && paymentIntent.status === 'succeeded') {
-          navigate(`/payment-result?payment_intent=${paymentIntent.id}&payment_intent_client_secret=${paymentIntent.client_secret}&redirect_status=succeeded`);
+          navigate(`${returnUrl}?payment_intent=${paymentIntent.id}&payment_intent_client_secret=${paymentIntent.client_secret}&redirect_status=succeeded`);
           return;
         }
       }

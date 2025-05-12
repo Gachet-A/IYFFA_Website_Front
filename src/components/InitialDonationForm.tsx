@@ -131,7 +131,7 @@ const InitialDonationForm: React.FC<InitialDonationFormProps> = ({ onSubmit, isL
           />
           <Label htmlFor="consent" className="text-sm">
             I agree to the{' '}
-            <a href="/terms" className="text-[#1EAEDB] hover:underline">
+            <a href="/terms" target="_blank"  className="text-[#1EAEDB] hover:underline">
               Terms & Data Protection Policy
             </a>
             {' '}and consent to the collection and processing of my data for legal purposes.

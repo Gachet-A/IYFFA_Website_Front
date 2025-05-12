@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -32,7 +33,11 @@ const UserManagement = () => {
   const { isAdmin, getToken } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToApprove, setUserToApprove] = useState<User | null>(null);
 
   const {
     users,
@@ -164,22 +169,21 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await deleteUser(userId);
-        await queryClient.invalidateQueries({ queryKey: ['users'] });
-        toast({
-          title: "Success",
-          description: "User deleted successfully",
-        });
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to delete user",
-          variant: "destructive",
-        });
-      }
+    try {
+      await deleteUser(userId);
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
     }
   };
 
@@ -190,9 +194,9 @@ const UserManagement = () => {
   };
 
   const handleApproveUser = async (userId: number) => {
-    if (window.confirm('Are you sure you want to approve this user?')) {
-      await approveUserMutation.mutateAsync(userId);
-    }
+    await approveUserMutation.mutateAsync(userId);
+    setIsApproveDialogOpen(false);
+    setUserToApprove(null);
   };
 
   if (isLoading) {
@@ -294,7 +298,10 @@ const UserManagement = () => {
                         variant="outline"
                         size="icon"
                         className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
-                        onClick={() => handleApproveUser(user.id)}
+                        onClick={() => {
+                          setUserToApprove(user);
+                          setIsApproveDialogOpen(true);
+                        }}
                         disabled={approveUserMutation.isPending}
                       >
                         <Check className="w-4 h-4" />
@@ -312,7 +319,10 @@ const UserManagement = () => {
                       variant="outline"
                       size="icon"
                       className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
-                      onClick={() => handleDeleteUser(user.id)}
+                      onClick={() => {
+                        setUserToDelete(user);
+                        setIsDeleteDialogOpen(true);
+                      }}
                       disabled={isDeleting}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -324,6 +334,71 @@ const UserManagement = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setUserToDelete(null);
+        }
+        setIsDeleteDialogOpen(open);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {userToDelete?.first_name} {userToDelete?.last_name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setUserToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => userToDelete && handleDeleteUser(userToDelete.id)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve User Dialog */}
+      <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to approve {userToApprove?.first_name} {userToApprove?.last_name}? A password setup email will be sent to their email address.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsApproveDialogOpen(false);
+                setUserToApprove(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => userToApprove && handleApproveUser(userToApprove.id)}
+              disabled={approveUserMutation.isPending}
+            >
+              Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog d'édition séparé */}
       <Dialog 

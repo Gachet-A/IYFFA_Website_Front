@@ -172,6 +172,7 @@ const Dashboard = () => {
               checked={user?.otp_enabled}
               onCheckedChange={handle2FAToggle}
               disabled={isEnabling || isDisabling}
+              className="data-[state=unchecked]:bg-gray-300 data-[state=unchecked]:opacity-100"
             />
           </div>
         </CardContent>

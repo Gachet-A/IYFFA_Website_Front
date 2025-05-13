@@ -123,6 +123,7 @@ const Dashboard = () => {
     personal_stats: {
       my_articles: 0,
       my_events: 0,
+      my_projects: 0,
       my_donations: [],
       membership_status: {
         is_active: false,

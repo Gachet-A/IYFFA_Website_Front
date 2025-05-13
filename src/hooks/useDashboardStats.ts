@@ -9,6 +9,7 @@ export interface DashboardStats {
   personal_stats: {
     my_articles: number;
     my_events: number;
+    my_projects: number;
     my_donations: Array<{
       amount: number;
       creation_time: string;

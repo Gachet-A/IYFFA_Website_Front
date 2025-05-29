@@ -19,7 +19,7 @@ const Membership = () => {
     dateOfBirth: "",
     email: "",
     phone: "",
-    monthlyContribution: "",
+    
     acceptTerms1: false,
     acceptTerms2: false,
     acceptTerms3: false,
@@ -163,19 +163,7 @@ const Membership = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-white">Monthly Contribution ($)</label>
-              <Input
-                type="number"
-                name="monthlyContribution"
-                value={formData.monthlyContribution}
-                onChange={handleChange}
-                min="0"
-                step="1"
-                className="bg-[#2A2F3C] text-white border-[#1EAEDB]/20"
-                required
-              />
-            </div>
+            
 
             <div className="space-y-4">
               <div className="flex items-center gap-2">
